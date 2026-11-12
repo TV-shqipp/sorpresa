@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Una Sorpresa per Te</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        hand: ['"Caveat"', 'cursive'],
+                    },
+                    colors: {
+                        cream: '#FAF6F0',
+                        nightSky: '#0D1326',
+                        starGold: '#FCD34D',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Reset & Mobile Feel */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: #120f16;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Mobile-first container (Full screen on mobile, phone frame on desktop preview) */
+        .app-shell {
+            width: 100%;
+            min-height: 100dvh;
+            max-width: 430px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 500px) {
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                padding: 1.5rem 0;
+                background: radial-gradient(circle at center, #261f33 0%, #0d0b12 100%);
+            }
+            .app-shell {
+                min-height: 844px;
+                height: 88vh;
+                max-height: 880px;
+                border-radius: 44px;
+                box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7), 0 0 0 10px #221d2b, 0 0 0 12px #383047;
+            }
+        }
+
+        /* Crazy Zoom In / Zoom Out & Shake Animations for the Prank Screens */
+        @keyframes crazyZoomBounce {
+            0% { transform: scale(0.25) rotate(-10deg); }
+            25% { transform: scale(1.24) rotate(6deg); }
+            50% { transform: scale(0.8) rotate(-5deg); }
+            75% { transform: scale(1.15) rotate(3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        @keyframes pulseZoomLoop {
+            0%, 100% { transform: scale(0.92) rotate(-2deg); }
+            50% { transform: scale(1.16) rotate(2deg); }
+        }
+        .animate-crazy-zoom {
+            animation: crazyZoomBounce 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+                       pulseZoomLoop 1.05s ease-in-out 0.85s infinite;
+        }
+
+        @keyframes dramaticWave {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-8px) scale(1.07); }
+        }
+        .animate-dramatic-wave {
+            animation: dramaticWave 1.5s ease-in-out infinite;
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px) rotate(-1.5deg); }
+            40%, 80% { transform: translateX(10px) rotate(1.5deg); }
+        }
+        .animate-wrong-shake {
+            animation: wrongShake 0.45s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PHONE CONTAINER -->
+    <div id="appShell" class="app-shell bg-gradient-to-b from-[#0D1326] via-[#151C36] to-[#1F1934] text-cream select-none">
+
+        <!-- CELEBRATION PARTICLE CANVAS -->
+        <canvas id="confettiCanvas" class="pointer-events-none absolute inset-0 w-full h-full z-50"></canvas>
+
+        <!-- MAIN QUIZ & UNLOCK CONTAINER -->
+        <div class="relative z-20 flex-1 flex flex-col justify-between p-6 overflow-y-auto">
+
+            <!-- Top Status Header -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                    <span id="statusLabel" class="text-[11px] font-bold uppercase tracking-widest text-amber-200/90">
+                        Accesso Bloccato 🔒
+                    </span>
+                </div>
+                <span id="quizStageBadge" class="px-3 py-1 rounded-full text-[11px] font-semibold bg-white/10 border border-white/15 text-amber-300">
+                    Verifica Iniziale
+                </span>
+            </div>
+
+            <!-- ==========================================
+                 1. SCHERMATA INIZIALE DI BLOCCO
+                 ========================================== -->
+            <div id="quizScreenIntro" class="my-auto text-center space-y-6 py-4">
+                <div class="w-20 h-20 rounded-3xl bg-amber-400/15 border-2 border-amber-300/40 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/10">
+                    <span class="text-4xl">🔐</span>
+                </div>
+
+                <div class="space-y-2.5">
+                    <p class="font-hand text-3xl text-starGold">Alt! Fermati un attimo...</p>
+                    <h1 class="font-serif text-3xl sm:text-4xl font-bold text-white leading-tight">
+                        Vuoi passare alla sorpresa?
+                    </h1>
+                    <p class="text-sm text-slate-300 leading-relaxed max-w-[300px] mx-auto pt-1">
+                        Se vuoi sbloccare la sorpresa che ho preparato per te, dovrai prima risolvere <span class="text-amber-300 font-bold underline">3 quiz tutti correttamente</span>!
+                    </p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-slate-300 max-w-[295px] mx-auto leading-relaxed">
+                    ⚠️ <strong class="text-amber-200">Regola fondamentale:</strong> se ne sbagli anche solo uno, si riparte da capo con domande nuove!
+                </div>
+
+                <button onclick="startQuizPart1()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-300 to-amber-400 text-slate-950 font-extrabold text-sm uppercase tracking-wider shadow-xl shadow-amber-400/20 active:scale-95 transition-transform">
+                    Inizia i 3 Quiz 🚀
+                </button>
+            </div>
+
+            <!-- ==========================================
+                 2. SCHERMATA DOMANDA (TABELLINE & ESPRESSIONE)
+                 ========================================== -->
+            <div id="quizScreenQuestion" class="hidden my-auto flex-col space-y-5 py-2">
+                <!-- Progress & Subtitle -->
+                <div class="text-center space-y-1.5">
+                    <span id="quizStepCounter" class="inline-block px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-300/30">
+                        Quiz 1 di 3
+                    </span>
+                    <p id="quizSubPrompt" class="text-xs text-slate-400">
+                        Scegli la risposta esatta tra le 4 opzioni:
+                    </p>
+                </div>
+
+                <!-- Question Display Card -->
+                <div id="quizCardBox" class="bg-white/10 backdrop-blur-md border-2 border-white/15 rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
+                    <div id="quizCategoryLabel" class="text-[11px] uppercase tracking-widest text-amber-200/75 font-semibold mb-2">
+                        Tabellina
+                    </div>
+                    <div id="quizQuestionText" class="font-mono font-bold text-4xl text-white tracking-wide py-3 break-words leading-snug">
+                        7 × 8 = ?
+                    </div>
+                </div>
+
+                <!-- Feedback Banner (Right / Wrong) -->
+                <div id="quizFeedbackBanner" class="hidden rounded-2xl p-3 text-center text-xs font-bold transition-all"></div>
+
+                <!-- 4 Multiple Choice Buttons -->
+                <div id="quizOptionsGrid" class="grid grid-cols-2 gap-3.5 pt-1">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 3. SCHERZO #1 ("Stronza credevi che...")
+                 ========================================== -->
+            <div id="quizScreenPrank1" class="hidden my-auto text-center space-y-7 py-4">
+                <div class="text-6xl animate-bounce">😈😂</div>
+
+                <div class="px-3 py-7 rounded-3xl bg-gradient-to-br from-rose-600/35 to-amber-500/25 border-2 border-rose-400/60 shadow-2xl overflow-hidden">
+                    <h2 class="animate-crazy-zoom font-sans font-extrabold text-2xl sm:text-3xl text-amber-300 uppercase tracking-tight leading-snug drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)] px-2">
+                        Stronza credevi che ti avrei fatto vincere facile
+                    </h2>
+                </div>
+
+                <p class="text-sm text-slate-300 font-medium leading-relaxed">
+                    Troppo facile cavarsela con 3 tabelline... <br>
+                    Adesso te ne toccano <span class="text-amber-300 font-bold underline">altre 2</span>! 😜
+                </p>
+
+                <button onclick="startQuizPart2()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-rose-500 to-amber-500 text-white font-extrabold text-sm uppercase tracking-wider shadow-xl shadow-rose-500/25 active:scale-95 transition-transform">
+                    Vai con gli altri 2 quiz 😤
+                </button>
+            </div>
+
+            <!-- ==========================================
+                 4. SCHERZO #2 ("l'ultima ti prometto, i tuoi preferiti…")
+                 ========================================== -->
+            <div id="quizScreenPrank2" class="hidden my-auto text-center space-y-6 py-4">
+                <div class="text-6xl animate-pulse">🤓📐</div>
+
+                <div class="p-6 rounded-3xl bg-white/10 border-2 border-amber-300/40 shadow-2xl">
+                    <p class="font-hand text-3xl text-amber-300 mb-2">Dai, ci siamo quasi...</p>
+                    <h2 class="animate-dramatic-wave font-serif italic font-bold text-3xl sm:text-4xl text-white leading-tight">
+                        “l’ultima ti prometto, i tuoi preferiti…”
+                    </h2>
+                </div>
+
+                <p class="text-xs text-slate-300 max-w-[280px] mx-auto leading-relaxed">
+                    Parentesi tonde, quadre e graffe: risolvi l'espressione senza farti ingannare!
+                </p>
+
+                <button onclick="startQuizAlgebraBoss()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-300 to-amber-400 text-slate-950 font-extrabold text-sm uppercase tracking-wider shadow-xl shadow-amber-400/25 active:scale-95 transition-transform">
+                    Mostrami l'espressione 😱
+                </button>
+            </div>
+
+            <!-- ==========================================
+                 5. SCHERMATA FINALE SBLOCCATA (PRONTA PER LA LETTERA)
+                 ========================================== -->
+            <div id="quizScreenUnlocked" class="hidden my-auto text-center space-y-6 py-4">
+                <div class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mx-auto text-4xl shadow-lg shadow-emerald-500/20">
+                    💌
+                </div>
+
+                <div class="space-y-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">
+                        Sfida Superata al 100%!
+                    </span>
+                    <h2 class="font-serif text-3xl sm:text-4xl font-bold text-white leading-tight">
+                        Bravissima, hai sbloccato la tua sorpresa! ❤️
+                    </h2>
+                </div>
+
+                <div class="pt-4">
+                    <button onclick="resetFullQuiz()" class="py-3 px-5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-xs font-semibold text-amber-200 transition-all active:scale-95">
+                        🔄 Rigenera nuovi quiz casuali (Test)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer Note -->
+            <div class="text-center text-[11px] text-slate-500 pt-2">
+                Sistema di sicurezza anti-fidanzata v2.0
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==========================================
+         LOGICA JAVASCRIPT & GENERATORI CASUALI
+         ========================================== -->
+    <script>
+        // Stato della sessione corrente
+        let sessionQuestions = [];
+        let currentQuizIndex = 0;
+        let quizLocked = false;
+
+        // Helper: numero intero casuale tra min e max (inclusi)
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Helper: mescola un array (Fisher-Yates shuffle)
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Helper: vibrazione leggera su smartphone
+        function triggerHaptic(pattern = 25) {
+            if (navigator.vibrate) {
+                try { navigator.vibrate(pattern); } catch (e) {}
+            }
+        }
+
+        /**
+         * 1. GENERATORE DI OPZIONI TRABOCCHETTO PER LE TABELLINE
+         * Crea 4 scelte plausibili basate sugli errori più comuni (tabelline adiacenti, ±2, ±4, ecc.)
+         */
+        function generateTabellinaOptions(a, b, correct) {
+            const distractorsPool = [
+                correct + 2,
+                correct - 2,
+                correct + 4,
+                correct - 4,
+                a * (b + 1),
+                a * (b - 1),
+                (a + 1) * b,
+                (a - 1) * b,
+                correct + 6,
+                correct - 6
+            ];
+
+            // Errori classici specifici molto frequenti nelle tabelline del 4, 6, 7, 8
+            const classicTraps = {
+                56: [54, 58, 64, 48],
+                54: [52, 56, 48, 63],
+                48: [42, 46, 54, 56],
+                42: [44, 46, 48, 36],
+                36: [32, 34, 38, 42],
+                28: [24, 26, 32, 34],
+                32: [28, 30, 34, 36],
+                24: [22, 26, 28, 18],
+                64: [56, 62, 66, 72],
+                72: [64, 68, 74, 63],
+                63: [54, 56, 61, 65]
+            };
+
+            const chosenWrongs = new Set();
+
+            // Se esistono trappole classiche per questo risultato, diamo loro priorità
+            if (classicTraps[correct]) {
+                const shuffledClassic = shuffleArray(classicTraps[correct]);
+                for (const val of shuffledClassic) {
+                    if (val !== correct && val > 8 && chosenWrongs.size < 3) {
+                        chosenWrongs.add(val);
+                    }
+                }
+            }
+
+            // Riempiamo eventuali posti mancanti dal pool di errori matematici vicini
+            const shuffledPool = shuffleArray(distractorsPool);
+            for (const candidate of shuffledPool) {
+                if (chosenWrongs.size >= 3) break;
+                if (candidate > 8 && candidate !== correct && !chosenWrongs.has(candidate)) {
+                    chosenWrongs.add(candidate);
+                }
+            }
+
+            // Fallback di sicurezza se servissero altri numeri
+            let offset = 2;
+            while (chosenWrongs.size < 3) {
+                const fallbackVal = correct + offset;
+                if (fallbackVal !== correct && !chosenWrongs.has(fallbackVal)) {
+                    chosenWrongs.add(fallbackVal);
+                }
+                offset += 2;
+            }
+
+            const finalOptions = shuffleArray([
+                String(correct),
+                ...Array.from(chosenWrongs).map(String)
+            ]);
+
+            return finalOptions;
+        }
+
+        /**
+         * 2. GENERATORE DI SET DI TABELLINE CASUALI (DEL 4, 6, 7, 8)
+         * Genera `count` domande tutte diverse tra loro per la partita corrente.
+         */
+        function generateTabellineSet(count = 5) {
+            const allowedTables = [4, 6, 7, 8];
+            const multipliers = [3, 4, 5, 6, 7, 8, 9];
+            const usedPairs = new Set();
+            const questions = [];
+
+            while (questions.length < count) {
+                const base = allowedTables[getRandomInt(0, allowedTables.length - 1)];
+                const mult = multipliers[getRandomInt(0, multipliers.length - 1)];
+
+                // Chiave univoca ordinata per evitare sia "7 × 8" che "8 × 7" nella stessa serie
+                const pairKey = [base, mult].sort((x, y) => x - y).join('x');
+
+                if (!usedPairs.has(pairKey)) {
+                    usedPairs.add(pairKey);
+
+                    // Decidiamo casualmente l'ordine dei fattori (es. 7 × 8 oppure 8 × 7)
+                    const swapOrder = Math.random() > 0.5;
+                    const first = swapOrder ? mult : base;
+                    const second = swapOrder ? base : mult;
+                    const correct = first * second;
+
+                    const index = questions.length;
+                    const isFirstPhase = index < 3;
+
+                    questions.push({
+                        stage: isFirstPhase ? 1 : 2,
+                        badge: isFirstPhase
+                            ? `Quiz ${index + 1} di 3`
+                            : `Bonus Quiz ${index - 2} di 2`,
+                        category: `Tabellina del ${base}`,
+                        question: `${first} × ${second} = ?`,
+                        options: generateTabellinaOptions(first, second, correct),
+                        correct: String(correct)
+                    });
+                }
+            }
+
+            return questions;
+        }
+
+        /**
+         * 3. GENERATORE DI ESPRESSIONE ALGEBRICA CASUALE (CON GRAFFE, QUADRE E TONDE)
+         * Sceglie casualmente tra 3 strutture diverse, garantisce risultati interi positivi
+         * e costruisce 3 risposte errate basate sui classici errori di segno o precedenza.
+         */
+        function generateRandomExpression() {
+            const templateType = getRandomInt(1, 3);
+            let expressionStr = "";
+            let correctResult = 0;
+            let trapCandidates = [];
+
+            if (templateType === 1) {
+                // Template A: { A - [ B × (C + D) - E × (F - G) ] } + H × K
+                const B = getRandomInt(3, 4);
+                const C = getRandomInt(2, 5);
+                const D = getRandomInt(2, 5);
+                const term1 = B * (C + D); // tra 12 e 40
+
+                const E = getRandomInt(2, 3);
+                const G = getRandomInt(2, 5);
+                const diffFG = getRandomInt(2, 4);
+                const F = G + diffFG;
+                const term2 = E * diffFG; // tra 4 e 12
+
+                const quadra = term1 - term2; // sempre positivo
+                const graffaTarget = getRandomInt(12, 32);
+                const A = quadra + graffaTarget; // garantisce { A - [...] } = graffaTarget > 0
+
+                const H = getRandomInt(2, 5);
+                const K = getRandomInt(2, 5);
+                const prodHK = H * K;
+
+                correctResult = (A - quadra) + prodHK;
+                expressionStr = `{ ${A} - [ ${B} × (${C} + ${D}) - ${E} × (${F} - ${G}) ] } + ${H} × ${K} =`;
+
+                // Errori tipici di calcolo per Template A:
+                trapCandidates = [
+                    correctResult + 2,
+                    correctResult - 2,
+                    correctResult + 4,
+                    correctResult - 4,
+                    (A - (term1 + term2)) + prodHK, // errore di segno dentro la quadra
+                    ((A - quadra) + H) * K,         // errore di precedenza sulla moltiplicazione finale
+                    correctResult + term2 * 2
+                ];
+
+            } else if (templateType === 2) {
+                // Template B: { [ (A + B) × C - D ] + E × (F - G) } - H × K
+                const A = getRandomInt(2, 5);
+                const B = getRandomInt(2, 5);
+                const C = getRandomInt(3, 4);
+                const prod1 = (A + B) * C; // tra 12 e 40
+
+                const D = getRandomInt(4, 9);
+                const quadra = prod1 - D;
+
+                const E = getRandomInt(2, 4);
+                const G = getRandomInt(2, 5);
+                const diffFG = getRandomInt(2, 4);
+                const F = G + diffFG;
+                const prod2 = E * diffFG;
+
+                const graffa = quadra + prod2;
+
+                const H = getRandomInt(2, 3);
+                const K = getRandomInt(2, 4);
+                const prodHK = H * K;
+
+                correctResult = graffa - prodHK;
+                expressionStr = `{ [ (${A} + ${B}) × ${C} - ${D} ] + ${E} × (${F} - ${G}) } - ${H} × ${K} =`;
+
+                // Errori tipici di calcolo per Template B:
+                trapCandidates = [
+                    correctResult + 2,
+                    correctResult - 2,
+                    correctResult + 4,
+                    correctResult - 4,
+                    (prod1 + D + prod2) - prodHK, // somma D invece di sottrarre
+                    (quadra - prod2) - prodHK,    // sottrae prod2 invece di sommare
+                    (graffa - H) * K              // dimentica la precedenza di H × K
+                ];
+
+            } else {
+                // Template C: A × { B + [ C × (D + E) - H × (F - G) ] } - K
+                const A = getRandomInt(2, 3);
+                const B = getRandomInt(3, 7);
+                const C = getRandomInt(3, 4);
+                const D = getRandomInt(2, 4);
+                const E = getRandomInt(2, 4);
+                const term1 = C * (D + E); // tra 12 e 32
+
+                const H = getRandomInt(2, 3);
+                const G = getRandomInt(2, 5);
+                const diffFG = getRandomInt(2, 3);
+                const F = G + diffFG;
+                const term2 = H * diffFG; // tra 4 e 9
+
+                const quadra = term1 - term2;
+                const graffa = B + quadra;
+                const K = getRandomInt(4, 9);
+
+                correctResult = (A * graffa) - K;
+                expressionStr = `${A} × { ${B} + [ ${C} × (${D} + ${E}) - ${H} × (${F} - ${G}) ] } - ${K} =`;
+
+                // Errori tipici di calcolo per Template C:
+                trapCandidates = [
+                    correctResult + 2,
+                    correctResult - 2,
+                    correctResult + A,
+                    correctResult - A,
+                    (A * B) + quadra - K,               // moltiplica A solo per B e non per tutta la graffa
+                    A * (B + term1 + term2) - K,        // sbaglia segno nella parentesi quadra
+                    correctResult + 4
+                ];
+            }
+
+            // Selezioniamo 3 risposte errate uniche, positive e molto vicine al risultato corretto
+            const chosenWrongs = new Set();
+            const shuffledTraps = shuffleArray(trapCandidates);
+
+            for (const val of shuffledTraps) {
+                if (chosenWrongs.size >= 3) break;
+                if (val > 0 && val !== correctResult && !chosenWrongs.has(val)) {
+                    chosenWrongs.add(val);
+                }
+            }
+
+            let stepOffset = 2;
+            while (chosenWrongs.size < 3) {
+                const candidate = correctResult + stepOffset;
+                if (candidate > 0 && candidate !== correctResult && !chosenWrongs.has(candidate)) {
+                    chosenWrongs.add(candidate);
+                }
+                stepOffset = stepOffset > 0 ? -stepOffset : -stepOffset + 2;
+            }
+
+            const options = shuffleArray([
+                String(correctResult),
+                ...Array.from(chosenWrongs).map(String)
+            ]);
+
+            return {
+                stage: 3,
+                badge: "Boss Finale 🔥",
+                category: "I tuoi preferiti: Espressione Algebrica!",
+                question: expressionStr,
+                options: options,
+                correct: String(correctResult)
+            };
+        }
+
+        /**
+         * Inizializza/Rigenera l'intero pacchetto di 6 quiz (5 tabelline + 1 espressione)
+         */
+        function buildNewQuizSession() {
+            const tabellineFive = generateTabellineSet(5);
+            const bossAlgebra = generateRandomExpression();
+            sessionQuestions = [...tabellineFive, bossAlgebra];
+        }
+
+        // Gestione visibilità schermate
+        function showOnlyScreen(screenId) {
+            const screens = [
+                'quizScreenIntro',
+                'quizScreenQuestion',
+                'quizScreenPrank1',
+                'quizScreenPrank2',
+                'quizScreenUnlocked'
+            ];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                    if (id === 'quizScreenQuestion') el.classList.add('flex');
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                }
+            });
+        }
+
+        // Avvio Fase 1 (Primi 3 quiz sulle tabelline)
+        function startQuizPart1() {
+            triggerHaptic(30);
+            buildNewQuizSession();
+            currentQuizIndex = 0;
+            document.getElementById('quizStageBadge').textContent = "Fase 1: Tabelline";
+            showOnlyScreen('quizScreenQuestion');
+            renderCurrentQuizQuestion();
+        }
+
+        // Avvio Fase 2 (Altri 2 quiz sulle tabelline dopo lo scherzo)
+        function startQuizPart2() {
+            triggerHaptic(35);
+            currentQuizIndex = 3;
+            document.getElementById('quizStageBadge').textContent = "Fase 2: Supplementari";
+            showOnlyScreen('quizScreenQuestion');
+            renderCurrentQuizQuestion();
+        }
+
+        // Avvio Fase 3 (Boss Finale: Espressione Algebrica)
+        function startQuizAlgebraBoss() {
+            triggerHaptic(45);
+            // Rigeneriamo una nuova espressione fresca
+            sessionQuestions[5] = generateRandomExpression();
+            currentQuizIndex = 5;
+            document.getElementById('quizStageBadge').textContent = "Fase Finale: Espressione";
+            showOnlyScreen('quizScreenQuestion');
+            renderCurrentQuizQuestion();
+        }
+
+        // Renderizza la domanda corrente a schermo
+        function renderCurrentQuizQuestion() {
+            quizLocked = false;
+            const q = sessionQuestions[currentQuizIndex];
+
+            document.getElementById('quizStepCounter').textContent = q.badge;
+            document.getElementById('quizCategoryLabel').textContent = q.category;
+
+            const qText = document.getElementById('quizQuestionText');
+            qText.textContent = q.question;
+
+            // Adatta dimensione testo se è l'espressione algebrica
+            if (currentQuizIndex === 5) {
+                qText.className = "font-mono font-bold text-xl sm:text-2xl text-amber-200 tracking-tight py-4 break-words leading-relaxed";
+                document.getElementById('quizSubPrompt').textContent = "Risolvi prima le tonde ( ), poi le quadre [ ] e infine le graffe { }!";
+            } else {
+                qText.className = "font-mono font-bold text-4xl text-white tracking-wide py-3";
+                document.getElementById('quizSubPrompt').textContent = "Scegli la risposta esatta tra le 4 opzioni:";
+            }
+
+            const feedback = document.getElementById('quizFeedbackBanner');
+            feedback.classList.add('hidden');
+
+            const grid = document.getElementById('quizOptionsGrid');
+            grid.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "py-4 px-3 rounded-2xl bg-white/10 hover:bg-white/15 border-2 border-white/20 text-white font-mono text-2xl font-bold shadow-lg active:scale-95 transition-all";
+                btn.textContent = opt;
+                btn.onclick = () => handleQuizAnswer(opt, btn);
+                grid.appendChild(btn);
+            });
+        }
+
+        // Gestisce il click su una delle 4 opzioni
+        function handleQuizAnswer(selectedValue, btnElement) {
+            if (quizLocked) return;
+            quizLocked = true;
+
+            const q = sessionQuestions[currentQuizIndex];
+            const feedback = document.getElementById('quizFeedbackBanner');
+            const cardBox = document.getElementById('quizCardBox');
+
+            if (selectedValue === q.correct) {
+                // Risposta Esatta
+                triggerHaptic(30);
+                btnElement.className = "py-4 px-3 rounded-2xl bg-emerald-500 border-2 border-emerald-300 text-slate-950 font-mono text-2xl font-extrabold shadow-lg scale-105 transition-all";
+
+                feedback.textContent = "✓ Esatto! Vai così!";
+                feedback.className = "rounded-2xl p-2.5 text-center text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30";
+                feedback.classList.remove('hidden');
+
+                setTimeout(() => {
+                    if (currentQuizIndex === 2) {
+                        // Finiti i primi 3 quiz -> Scherzo #1
+                        triggerHaptic([40, 80, 40]);
+                        showOnlyScreen('quizScreenPrank1');
+                    } else if (currentQuizIndex === 4) {
+                        // Finiti gli altri 2 quiz -> Scherzo #2 ("l'ultima ti prometto...")
+                        triggerHaptic([40, 80, 40]);
+                        showOnlyScreen('quizScreenPrank2');
+                    } else if (currentQuizIndex === 5) {
+                        // Finita l'espressione algebrica -> Sorpresa Sbloccata!
+                        triggerHaptic([50, 70, 50, 70]);
+                        unlockFinalScreen();
+                    } else {
+                        currentQuizIndex++;
+                        renderCurrentQuizQuestion();
+                    }
+                }, 650);
+
+            } else {
+                // Risposta Sbagliata
+                triggerHaptic([80, 50, 80]);
+                btnElement.className = "py-4 px-3 rounded-2xl bg-rose-600 border-2 border-rose-300 text-white font-mono text-2xl font-bold shadow-lg transition-all";
+                cardBox.classList.remove('animate-wrong-shake');
+                void cardBox.offsetWidth;
+                cardBox.classList.add('animate-wrong-shake');
+
+                if (currentQuizIndex === 5) {
+                    feedback.textContent = "❌ Sbagliato! Ti genero una nuova espressione, riprova!";
+                } else {
+                    feedback.textContent = "❌ Sbagliato! Si riparte dal Quiz 1 con nuove tabelline! 😂";
+                }
+                feedback.className = "rounded-2xl p-3 text-center text-xs font-bold bg-rose-500/25 text-rose-200 border border-rose-400/40";
+                feedback.classList.remove('hidden');
+
+                setTimeout(() => {
+                    if (currentQuizIndex === 5) {
+                        // Rigenera una nuova espressione casuale se sbaglia il boss finale
+                        sessionQuestions[5] = generateRandomExpression();
+                        renderCurrentQuizQuestion();
+                    } else {
+                        // Rigenera un nuovo set di tabelline casuali e riparte da zero
+                        buildNewQuizSession();
+                        currentQuizIndex = 0;
+                        document.getElementById('quizStageBadge').textContent = "Fase 1: Tabelline";
+                        renderCurrentQuizQuestion();
+                    }
+                }, 1450);
+            }
+        }
+
+        // Mostra la schermata finale sbloccata (dove andrà la lettera)
+        function unlockFinalScreen() {
+            document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
+            document.getElementById('statusLabel').textContent = "Sorpresa Sbloccata 🔓";
+            document.getElementById('quizStageBadge').textContent = "Completato ❤️";
+            showOnlyScreen('quizScreenUnlocked');
+            launchCelebrationParticles();
+        }
+
+        // Reset completo per testare la generazione casuale
+        function resetFullQuiz() {
+            triggerHaptic(30);
+            document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping";
+            document.getElementById('statusLabel').textContent = "Accesso Bloccato 🔒";
+            document.getElementById('quizStageBadge').textContent = "Verifica Iniziale";
+            showOnlyScreen('quizScreenIntro');
+        }
+
+        // Effetto coriandoli/particelle dorate allo sblocco
+        function launchCelebrationParticles() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const particles = [];
+            const colors = ['#FCD34D', '#F43F5E', '#34D399', '#FBBF24', '#FFFBEB'];
+
+            for (let i = 0; i < 45; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + Math.random() * 50,
+                    size: Math.random() * 5 + 3,
+                    speedY: -(Math.random() * 2.8 + 1.5),
+                    speedX: (Math.random() - 0.5) * 1.6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    alpha: 1
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                particles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    p.alpha -= 0.007;
+                    if (p.alpha > 0) {
+                        active = true;
+                        ctx.save();
+                        ctx.globalAlpha = Math.max(0, p.alpha);
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                });
+                if (active) {
+                    requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>
